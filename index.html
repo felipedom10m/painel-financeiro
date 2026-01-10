@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Financeiro - Controle de Investimentos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>💰 CONTROLE FINANCEIRO - PROJETO</h1>
+    </header>
+
+    <main class="container">
+        <!-- Caixa Gastos Pessoais -->
+        <div class="caixa-card">
+            <div class="caixa-header">
+                <h2>💳 GASTOS PESSOAIS</h2>
+            </div>
+
+            <div class="saldo-display">
+                <span class="saldo-label">SALDO ATUAL</span>
+                <span class="saldo-valor" id="saldo-pessoal">R$ 0,00</span>
+            </div>
+
+            <div class="botoes-acao">
+                <button class="btn btn-adicionar" onclick="abrirModal('pessoal', 'adicionar')">
+                    ➕ Adicionar
+                </button>
+                <button class="btn btn-retirar" onclick="abrirModal('pessoal', 'retirar')">
+                    ➖ Retirar
+                </button>
+            </div>
+
+            <div class="historico-section">
+                <h3>📋 HISTÓRICO</h3>
+                <div class="historico-lista" id="historico-pessoal">
+                    <p class="historico-vazio">Nenhuma movimentação ainda</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Caixa Marketing -->
+        <div class="caixa-card">
+            <div class="caixa-header">
+                <h2>📊 MARKETING</h2>
+            </div>
+
+            <div class="saldo-display">
+                <span class="saldo-label">SALDO ATUAL</span>
+                <span class="saldo-valor" id="saldo-marketing">R$ 0,00</span>
+            </div>
+
+            <div class="botoes-acao">
+                <button class="btn btn-adicionar" onclick="abrirModal('marketing', 'adicionar')">
+                    ➕ Adicionar
+                </button>
+                <button class="btn btn-retirar" onclick="abrirModal('marketing', 'retirar')">
+                    ➖ Retirar
+                </button>
+            </div>
+
+            <div class="historico-section">
+                <h3>📋 HISTÓRICO</h3>
+                <div class="historico-lista" id="historico-marketing">
+                    <p class="historico-vazio">Nenhuma movimentação ainda</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Adicionar/Retirar -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal()">&times;</span>
+            <h2 id="modal-titulo">Adicionar Valor</h2>
+
+            <form id="form-movimentacao" onsubmit="salvarMovimentacao(event)">
+                <div class="form-group">
+                    <label for="valor">Valor (R$)</label>
+                    <input type="number" id="valor" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="descricao">Descrição</label>
+                    <input type="text" id="descricao" placeholder="Ex: Mercado, Facebook Ads, Depósito..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="icone">Ícone</label>
+                    <select id="icone" required>
+                        <option value="💵">💵 Depósito</option>
+                        <option value="🛒">🛒 Mercado</option>
+                        <option value="🏪">🏪 Farmácia</option>
+                        <option value="🍕">🍕 Alimentação</option>
+                        <option value="⛽">⛽ Combustível</option>
+                        <option value="🏥">🏥 Saúde</option>
+                        <option value="📱">📱 Facebook Ads</option>
+                        <option value="🎯">🎯 Google Ads</option>
+                        <option value="📧">📧 Email Marketing</option>
+                        <option value="📊">📊 Outras Mídias</option>
+                        <option value="💳">💳 Pagamento</option>
+                        <option value="📝">📝 Outros</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="comprovante">Comprovante (opcional)</label>
+                    <input type="file" id="comprovante" accept="image/*,.pdf">
+                    <small>Imagem ou PDF</small>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-confirmar">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Comprovante -->
+    <div id="modal-comprovante" class="modal">
+        <div class="modal-content modal-comprovante-content">
+            <span class="modal-close" onclick="fecharModalComprovante()">&times;</span>
+            <h2>Comprovante</h2>
+            <div id="comprovante-display"></div>
+        </div>
+    </div>
+
+    <!-- Biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuração do Supabase (direto no HTML) -->
+    <script>
+        // Configuração
+        var SUPABASE_URL = 'https://gqswzyuaggalrpldsojt.supabase.co';
+        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdxc3d6eXVhZ2dhbHJwbGRzb2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNTE2NzIsImV4cCI6MjA4MzYyNzY3Mn0.Il-PTbxQHJhk0uZ0vdVPsKKLscq0syVe16sTDA7vLNU';
+
+        // Inicializar cliente Supabase usando var para criar variável global
+        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <!-- Script principal -->
+    <script src="script.js"></script>
+</body>
+</html>
