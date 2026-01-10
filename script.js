@@ -99,11 +99,18 @@ function abrirModal(caixa, tipo) {
 
     const modal = document.getElementById('modal');
     const titulo = document.getElementById('modal-titulo');
+    const descricaoInput = document.getElementById('descricao');
 
     if (tipo === 'adicionar') {
         titulo.textContent = '➕ Adicionar Valor';
+        // Remover obrigatoriedade da descrição ao adicionar
+        descricaoInput.removeAttribute('required');
+        descricaoInput.placeholder = 'Opcional: Ex: Depósito, Salário...';
     } else {
         titulo.textContent = '➖ Retirar Valor';
+        // Manter obrigatoriedade da descrição ao retirar
+        descricaoInput.setAttribute('required', 'required');
+        descricaoInput.placeholder = 'Ex: Mercado, Facebook Ads...';
     }
 
     // Limpar formulário
@@ -122,9 +129,14 @@ async function salvarMovimentacao(event) {
     event.preventDefault();
 
     const valor = parseFloat(document.getElementById('valor').value);
-    const descricao = document.getElementById('descricao').value;
+    let descricao = document.getElementById('descricao').value.trim();
     const icone = document.getElementById('icone').value;
     const comprovanteInput = document.getElementById('comprovante');
+
+    // Se não tiver descrição e for adicionar, usar descrição padrão
+    if (!descricao && tipoAtual === 'adicionar') {
+        descricao = '10/01/2025';
+    }
 
     // Processar comprovante se houver
     if (comprovanteInput.files.length > 0) {
