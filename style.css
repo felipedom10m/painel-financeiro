@@ -72,6 +72,25 @@ header h1 {
     gap: 2rem;
 }
 
+.acoes-globais {
+    max-width: 1400px;
+    margin: 0 auto 1.2rem;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-limpar-tudo {
+    background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+    color: #fff;
+}
+
+.btn-limpar-tudo:hover {
+    background: linear-gradient(135deg, #e53935 0%, #b71c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+}
+
 .caixa-card {
     background: #2d2d2d;
     border-radius: 16px;
@@ -487,6 +506,14 @@ header h1 {
 
 /* Responsividade */
 @media (max-width: 968px) {
+    .acoes-globais {
+        justify-content: stretch;
+    }
+
+    .btn-limpar-tudo {
+        width: 100%;
+    }
+
     .container {
         grid-template-columns: 1fr;
         gap: 1.5rem;
