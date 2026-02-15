@@ -197,6 +197,14 @@ function salvarEstadoAppInstalado() {
     }
 }
 
+function limparEstadoAppInstalado() {
+    try {
+        localStorage.removeItem(PWA_INSTALL_STATE_KEY);
+    } catch (error) {
+        console.warn('Não foi possível limpar estado de instalação do app:', error);
+    }
+}
+
 function appJaFoiMarcadoComoInstalado() {
     try {
         return localStorage.getItem(PWA_INSTALL_STATE_KEY) === '1';
@@ -219,9 +227,13 @@ function atualizarBannerInstalacao() {
         return;
     }
 
+    if (appJaFoiMarcadoComoInstalado()) {
+        installBanner.classList.add('hidden');
+        return;
+    }
+
     const possuiPromptInstalacao = Boolean(deferredInstallPrompt);
-    const appMarcadoComoInstalado = appJaFoiMarcadoComoInstalado();
-    const deveMostrarAjudaIOS = isIOSDevice() && isMobileDevice() && !appMarcadoComoInstalado;
+    const deveMostrarAjudaIOS = isIOSDevice() && isMobileDevice();
     const deveMostrar = possuiPromptInstalacao || deveMostrarAjudaIOS;
 
     installBanner.classList.toggle('hidden', !deveMostrar);
@@ -243,6 +255,7 @@ async function instalarAplicativo() {
         const { outcome } = await deferredInstallPrompt.userChoice;
 
         if (outcome === 'accepted') {
+            salvarEstadoAppInstalado();
             mostrarNotificacao('Instalação iniciada com sucesso!', 'sucesso');
         }
 
@@ -270,6 +283,7 @@ function configurarInstalacaoPWA() {
 
     window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
+        limparEstadoAppInstalado();
         deferredInstallPrompt = event;
         atualizarBannerInstalacao();
     });
