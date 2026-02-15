@@ -1,4 +1,4 @@
-const CACHE_NAME = 'painel-financeiro-v3';
+const CACHE_NAME = 'painel-financeiro-v4';
 const urlsToCache = [
   '/painel-financeiro/',
   '/painel-financeiro/index.html',
