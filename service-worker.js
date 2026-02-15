@@ -1,4 +1,4 @@
-const CACHE_NAME = 'painel-financeiro-v2';
+const CACHE_NAME = 'painel-financeiro-v3';
 const urlsToCache = [
   '/painel-financeiro/',
   '/painel-financeiro/index.html',
@@ -16,6 +16,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
 // Ativar Service Worker
@@ -31,6 +32,7 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  self.clients.claim();
 });
 
 // Interceptar requisições
