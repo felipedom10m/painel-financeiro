@@ -16,6 +16,8 @@ let tipoAtual = '';
 let sincronizacaoEmAndamento = false;
 let deferredInstallPrompt = null;
 let contextoExclusao = null;
+let instalacaoEmAndamento = false;
+let timeoutInstalacaoPendente = null;
 
 const CACHE_KEY_DADOS = 'painel_financeiro_cache_v1';
 const PWA_INSTALL_STATE_KEY = 'painel_financeiro_app_instalado_v1';
@@ -197,14 +199,6 @@ function salvarEstadoAppInstalado() {
     }
 }
 
-function limparEstadoAppInstalado() {
-    try {
-        localStorage.removeItem(PWA_INSTALL_STATE_KEY);
-    } catch (error) {
-        console.warn('Não foi possível limpar estado de instalação do app:', error);
-    }
-}
-
 function appJaFoiMarcadoComoInstalado() {
     try {
         return localStorage.getItem(PWA_INSTALL_STATE_KEY) === '1';
@@ -232,11 +226,25 @@ function atualizarBannerInstalacao() {
         return;
     }
 
+    if (instalacaoEmAndamento) {
+        installBanner.classList.add('hidden');
+        return;
+    }
+
     const possuiPromptInstalacao = Boolean(deferredInstallPrompt);
     const deveMostrarAjudaIOS = isIOSDevice() && isMobileDevice();
     const deveMostrar = possuiPromptInstalacao || deveMostrarAjudaIOS;
 
     installBanner.classList.toggle('hidden', !deveMostrar);
+}
+
+function limparTimeoutInstalacaoPendente() {
+    if (!timeoutInstalacaoPendente) {
+        return;
+    }
+
+    clearTimeout(timeoutInstalacaoPendente);
+    timeoutInstalacaoPendente = null;
 }
 
 function atualizarBannerOffline() {
@@ -251,15 +259,24 @@ function atualizarBannerOffline() {
 
 async function instalarAplicativo() {
     if (deferredInstallPrompt) {
+        instalacaoEmAndamento = true;
+        atualizarBannerInstalacao();
         deferredInstallPrompt.prompt();
         const { outcome } = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
 
         if (outcome === 'accepted') {
-            salvarEstadoAppInstalado();
-            mostrarNotificacao('Instalação iniciada com sucesso!', 'sucesso');
+            limparTimeoutInstalacaoPendente();
+            timeoutInstalacaoPendente = setTimeout(() => {
+                if (!appJaFoiMarcadoComoInstalado() && !isStandaloneMode()) {
+                    instalacaoEmAndamento = false;
+                    atualizarBannerInstalacao();
+                }
+            }, 15000);
+            return;
         }
 
-        deferredInstallPrompt = null;
+        instalacaoEmAndamento = false;
         atualizarBannerInstalacao();
         return;
     }
@@ -283,16 +300,30 @@ function configurarInstalacaoPWA() {
 
     window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
-        limparEstadoAppInstalado();
+        if (appJaFoiMarcadoComoInstalado()) {
+            deferredInstallPrompt = null;
+            atualizarBannerInstalacao();
+            return;
+        }
+
+        if (instalacaoEmAndamento) {
+            return;
+        }
+
         deferredInstallPrompt = event;
         atualizarBannerInstalacao();
     });
 
     window.addEventListener('appinstalled', () => {
+        limparTimeoutInstalacaoPendente();
+        instalacaoEmAndamento = false;
+        const jaEstavaMarcadoComoInstalado = appJaFoiMarcadoComoInstalado();
         deferredInstallPrompt = null;
         salvarEstadoAppInstalado();
         atualizarBannerInstalacao();
-        mostrarNotificacao('Aplicativo instalado com sucesso!', 'sucesso');
+        if (!jaEstavaMarcadoComoInstalado) {
+            mostrarNotificacao('Aplicativo instalado com sucesso!', 'sucesso');
+        }
     });
 
     const displayModeMedia = window.matchMedia('(display-mode: standalone)');
@@ -300,6 +331,8 @@ function configurarInstalacaoPWA() {
     if (displayModeMedia.addEventListener) {
         displayModeMedia.addEventListener('change', (event) => {
             if (event.matches) {
+                limparTimeoutInstalacaoPendente();
+                instalacaoEmAndamento = false;
                 salvarEstadoAppInstalado();
             }
             atualizarBannerInstalacao();
