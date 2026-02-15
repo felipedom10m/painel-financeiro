@@ -18,6 +18,7 @@ let deferredInstallPrompt = null;
 let contextoExclusao = null;
 
 const CACHE_KEY_DADOS = 'painel_financeiro_cache_v1';
+const PWA_INSTALL_STATE_KEY = 'painel_financeiro_app_instalado_v1';
 
 // Inicialização principal
 document.addEventListener('DOMContentLoaded', async function() {
@@ -188,6 +189,23 @@ function isMobileDevice() {
     return mobileByUA || iPadDesktopMode;
 }
 
+function salvarEstadoAppInstalado() {
+    try {
+        localStorage.setItem(PWA_INSTALL_STATE_KEY, '1');
+    } catch (error) {
+        console.warn('Não foi possível salvar estado de instalação do app:', error);
+    }
+}
+
+function appJaFoiMarcadoComoInstalado() {
+    try {
+        return localStorage.getItem(PWA_INSTALL_STATE_KEY) === '1';
+    } catch (error) {
+        console.warn('Não foi possível ler estado de instalação do app:', error);
+        return false;
+    }
+}
+
 function atualizarBannerInstalacao() {
     const installBanner = document.getElementById('install-banner');
 
@@ -195,7 +213,17 @@ function atualizarBannerInstalacao() {
         return;
     }
 
-    const deveMostrar = !isStandaloneMode();
+    if (isStandaloneMode()) {
+        salvarEstadoAppInstalado();
+        installBanner.classList.add('hidden');
+        return;
+    }
+
+    const possuiPromptInstalacao = Boolean(deferredInstallPrompt);
+    const appMarcadoComoInstalado = appJaFoiMarcadoComoInstalado();
+    const deveMostrarAjudaIOS = isIOSDevice() && isMobileDevice() && !appMarcadoComoInstalado;
+    const deveMostrar = possuiPromptInstalacao || deveMostrarAjudaIOS;
+
     installBanner.classList.toggle('hidden', !deveMostrar);
 }
 
@@ -248,6 +276,7 @@ function configurarInstalacaoPWA() {
 
     window.addEventListener('appinstalled', () => {
         deferredInstallPrompt = null;
+        salvarEstadoAppInstalado();
         atualizarBannerInstalacao();
         mostrarNotificacao('Aplicativo instalado com sucesso!', 'sucesso');
     });
@@ -255,7 +284,12 @@ function configurarInstalacaoPWA() {
     const displayModeMedia = window.matchMedia('(display-mode: standalone)');
 
     if (displayModeMedia.addEventListener) {
-        displayModeMedia.addEventListener('change', atualizarBannerInstalacao);
+        displayModeMedia.addEventListener('change', (event) => {
+            if (event.matches) {
+                salvarEstadoAppInstalado();
+            }
+            atualizarBannerInstalacao();
+        });
     }
 
     window.addEventListener('pageshow', atualizarBannerInstalacao);
