@@ -508,8 +508,8 @@ function fecharModalComprovante() {
 }
 
 function obterItensParaLimpeza(caixa) {
-    if (caixa === 'todos') {
-        return [...dados.pessoal.historico, ...dados.marketing.historico];
+    if (!['pessoal', 'marketing'].includes(caixa)) {
+        return [];
     }
 
     return [...dados[caixa].historico];
@@ -524,7 +524,7 @@ function textoCaixa(caixa) {
         return 'Marketing';
     }
 
-    return 'Pessoal + Marketing';
+    return '';
 }
 
 async function deletarComprovantesEmLote(itens) {
@@ -551,19 +551,6 @@ async function deletarComprovantesEmLote(itens) {
 }
 
 async function deletarMovimentacoesEmLote(caixa) {
-    if (caixa === 'todos') {
-        const { error } = await supabase
-            .from('movimentacoes')
-            .delete()
-            .in('caixa', ['pessoal', 'marketing']);
-
-        if (error) {
-            console.error('Erro ao deletar movimentações em lote:', error);
-        }
-
-        return !error;
-    }
-
     const { error } = await supabase
         .from('movimentacoes')
         .delete()
@@ -577,19 +564,16 @@ async function deletarMovimentacoesEmLote(caixa) {
 }
 
 function limparDadosLocais(caixa) {
-    if (caixa === 'todos') {
-        dados.pessoal.saldo = 0;
-        dados.pessoal.historico = [];
-        dados.marketing.saldo = 0;
-        dados.marketing.historico = [];
-        return;
-    }
-
     dados[caixa].saldo = 0;
     dados[caixa].historico = [];
 }
 
 async function limparHistorico(caixa) {
+    if (!['pessoal', 'marketing'].includes(caixa)) {
+        mostrarNotificacao('Ação inválida para limpeza.', 'erro');
+        return;
+    }
+
     if (!navigator.onLine) {
         mostrarNotificacao('Sem internet: não é possível limpar histórico agora.', 'erro');
         return;
