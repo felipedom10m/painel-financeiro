@@ -12,6 +12,42 @@ body {
     padding-bottom: 2rem;
 }
 
+.hidden {
+    display: none !important;
+}
+
+.topo-notificacoes {
+    width: 100%;
+    padding: 0.8rem 1rem 0;
+}
+
+.topo-banner {
+    max-width: 1400px;
+    margin: 0 auto 0.8rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.topo-banner-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.topo-banner-instalar {
+    background: rgba(212, 175, 55, 0.16);
+    border-color: #D4AF37;
+}
+
+.topo-banner-offline {
+    background: rgba(244, 67, 54, 0.16);
+    border-color: #f44336;
+}
+
 header {
     background: linear-gradient(135deg, #B8860B 0%, #D4AF37 50%, #FFD700 100%);
     padding: 1.5rem;
@@ -103,6 +139,19 @@ header h1 {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-instalar-app {
+    background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+    color: #1a1a1a;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.btn-instalar-app:hover {
+    background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+    transform: translateY(-1px);
 }
 
 .btn-adicionar {
@@ -429,6 +478,21 @@ header h1 {
 }
 
 @media (max-width: 480px) {
+    .topo-notificacoes {
+        padding: 0.6rem 0.7rem 0;
+    }
+
+    .topo-banner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+
+    .topo-banner-text {
+        font-size: 0.88rem;
+        text-align: center;
+    }
+
     header h1 {
         font-size: 1.2rem;
     }

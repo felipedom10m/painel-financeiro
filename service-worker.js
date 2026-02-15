@@ -1,9 +1,12 @@
-const CACHE_NAME = 'painel-financeiro-v1';
+const CACHE_NAME = 'painel-financeiro-v2';
 const urlsToCache = [
   '/painel-financeiro/',
   '/painel-financeiro/index.html',
   '/painel-financeiro/style.css',
   '/painel-financeiro/script.js',
+  '/painel-financeiro/manifest.json',
+  '/painel-financeiro/icon-192.png',
+  '/painel-financeiro/icon-512.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 

@@ -13,11 +13,19 @@ let dados = {
 // Variáveis globais para o modal
 let caixaAtual = '';
 let tipoAtual = '';
+let sincronizacaoEmAndamento = false;
+let deferredInstallPrompt = null;
 
-// Carregar dados do Supabase ao iniciar
+const CACHE_KEY_DADOS = 'painel_financeiro_cache_v1';
+
+// Inicialização principal
 document.addEventListener('DOMContentLoaded', async function() {
-    await carregarDados();
+    configurarInstalacaoPWA();
+    configurarEventosDeConexao();
+    carregarCacheLocal();
     atualizarInterface();
+    await sincronizarDadosComServidor();
+    atualizarBannerOffline();
 });
 
 // Salvar dados no Supabase (não usado mais - agora salvamos direto ao adicionar)
@@ -26,8 +34,33 @@ function salvarDados() {
     // Os dados são salvos direto no Supabase quando adicionados
 }
 
+// Sincronizar dados com o servidor quando o app volta ao foco/conexão
+async function sincronizarDadosComServidor(opcoes = {}) {
+    const { silencioso = false } = opcoes;
+
+    if (sincronizacaoEmAndamento || !navigator.onLine) {
+        return false;
+    }
+
+    sincronizacaoEmAndamento = true;
+
+    try {
+        const sucesso = await carregarDados({ silencioso });
+
+        if (sucesso) {
+            atualizarInterface();
+        }
+
+        return sucesso;
+    } finally {
+        sincronizacaoEmAndamento = false;
+    }
+}
+
 // Carregar dados do Supabase
-async function carregarDados() {
+async function carregarDados(opcoes = {}) {
+    const { silencioso = false } = opcoes;
+
     try {
         // Buscar todas as movimentações do banco
         const { data: movimentacoes, error } = await supabase
@@ -37,8 +70,10 @@ async function carregarDados() {
 
         if (error) {
             console.error('Erro ao carregar dados:', error);
-            mostrarNotificacao('Erro ao carregar dados do servidor', 'erro');
-            return;
+            if (!silencioso) {
+                mostrarNotificacao('Erro ao carregar dados do servidor', 'erro');
+            }
+            return false;
         }
 
         // Organizar os dados por caixa
@@ -48,10 +83,52 @@ async function carregarDados() {
         // Recalcular os saldos
         dados.pessoal.saldo = dados.pessoal.historico.reduce((total, item) => total + item.valor, 0);
         dados.marketing.saldo = dados.marketing.historico.reduce((total, item) => total + item.valor, 0);
+        salvarCacheLocal();
+        return true;
 
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        mostrarNotificacao('Erro ao conectar com o servidor', 'erro');
+        if (!silencioso) {
+            mostrarNotificacao('Erro ao conectar com o servidor', 'erro');
+        }
+        return false;
+    }
+}
+
+function salvarCacheLocal() {
+    try {
+        const payload = {
+            pessoal: dados.pessoal,
+            marketing: dados.marketing,
+            atualizadoEm: Date.now()
+        };
+
+        localStorage.setItem(CACHE_KEY_DADOS, JSON.stringify(payload));
+    } catch (error) {
+        console.warn('Não foi possível salvar cache local:', error);
+    }
+}
+
+function carregarCacheLocal() {
+    try {
+        const rawCache = localStorage.getItem(CACHE_KEY_DADOS);
+
+        if (!rawCache) {
+            return false;
+        }
+
+        const cache = JSON.parse(rawCache);
+
+        if (!cache || !cache.pessoal || !cache.marketing) {
+            return false;
+        }
+
+        dados.pessoal = cache.pessoal;
+        dados.marketing = cache.marketing;
+        return true;
+    } catch (error) {
+        console.warn('Não foi possível carregar cache local:', error);
+        return false;
     }
 }
 
@@ -90,6 +167,120 @@ function formatarDataHora(timestamp) {
     const hora = String(data.getHours()).padStart(2, '0');
     const minuto = String(data.getMinutes()).padStart(2, '0');
     return `${dia}/${mes} ${hora}:${minuto}`;
+}
+
+function isStandaloneMode() {
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true
+        || document.referrer.startsWith('android-app://');
+}
+
+function isIOSDevice() {
+    const iOSByUA = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const iPadDesktopMode = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return iOSByUA || iPadDesktopMode;
+}
+
+function isMobileDevice() {
+    const mobileByUA = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const iPadDesktopMode = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return mobileByUA || iPadDesktopMode;
+}
+
+function atualizarBannerInstalacao() {
+    const installBanner = document.getElementById('install-banner');
+
+    if (!installBanner) {
+        return;
+    }
+
+    const deveMostrar = !isStandaloneMode();
+    installBanner.classList.toggle('hidden', !deveMostrar);
+}
+
+function atualizarBannerOffline() {
+    const offlineBanner = document.getElementById('offline-banner');
+
+    if (!offlineBanner) {
+        return;
+    }
+
+    offlineBanner.classList.toggle('hidden', navigator.onLine);
+}
+
+async function instalarAplicativo() {
+    if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+            mostrarNotificacao('Instalação iniciada com sucesso!', 'sucesso');
+        }
+
+        deferredInstallPrompt = null;
+        atualizarBannerInstalacao();
+        return;
+    }
+
+    if (isIOSDevice()) {
+        mostrarNotificacao('No iPhone: Compartilhar > Adicionar à Tela de Início.', 'info');
+        return;
+    }
+
+    mostrarNotificacao('Use o menu do navegador e toque em Instalar aplicativo.', 'info');
+}
+
+function configurarInstalacaoPWA() {
+    const installButton = document.getElementById('install-app-btn');
+
+    if (!installButton) {
+        return;
+    }
+
+    installButton.addEventListener('click', instalarAplicativo);
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        atualizarBannerInstalacao();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredInstallPrompt = null;
+        atualizarBannerInstalacao();
+        mostrarNotificacao('Aplicativo instalado com sucesso!', 'sucesso');
+    });
+
+    const displayModeMedia = window.matchMedia('(display-mode: standalone)');
+
+    if (displayModeMedia.addEventListener) {
+        displayModeMedia.addEventListener('change', atualizarBannerInstalacao);
+    }
+
+    window.addEventListener('pageshow', atualizarBannerInstalacao);
+
+    atualizarBannerInstalacao();
+}
+
+function configurarEventosDeConexao() {
+    window.addEventListener('online', async () => {
+        atualizarBannerOffline();
+        await sincronizarDadosComServidor({ silencioso: true });
+    });
+
+    window.addEventListener('offline', () => {
+        atualizarBannerOffline();
+    });
+
+    window.addEventListener('focus', () => {
+        sincronizarDadosComServidor({ silencioso: true });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            sincronizarDadosComServidor({ silencioso: true });
+        }
+    });
 }
 
 // Abrir modal
@@ -205,6 +396,7 @@ async function finalizarMovimentacao(valor, descricao, icone, arquivoComprovante
         // Atualizar dados locais
         dados[caixaAtual].saldo += valorFinal;
         dados[caixaAtual].historico.unshift(novaMovimentacao);
+        salvarCacheLocal();
 
         // Atualizar interface
         atualizarInterface();
@@ -361,6 +553,7 @@ async function deletarMovimentacao(caixa, id) {
         // Remover do histórico local
         const index = dados[caixa].historico.findIndex(m => m.id === id);
         dados[caixa].historico.splice(index, 1);
+        salvarCacheLocal();
 
         // Atualizar interface
         atualizarInterface();
@@ -379,6 +572,7 @@ function mostrarNotificacao(mensagem, tipo) {
     const notificacao = document.createElement('div');
     notificacao.className = `notificacao notificacao-${tipo}`;
     notificacao.textContent = mensagem;
+    const corNotificacao = tipo === 'sucesso' ? '#4CAF50' : tipo === 'info' ? '#1E88E5' : '#f44336';
 
     // Adicionar estilos inline
     notificacao.style.cssText = `
@@ -386,7 +580,7 @@ function mostrarNotificacao(mensagem, tipo) {
         top: 20px;
         right: 20px;
         padding: 1rem 1.5rem;
-        background: ${tipo === 'sucesso' ? '#4CAF50' : '#f44336'};
+        background: ${corNotificacao};
         color: white;
         border-radius: 8px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);

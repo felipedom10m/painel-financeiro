@@ -7,11 +7,24 @@
     <title>Painel Financeiro - Controle de Investimentos</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Financeiro">
 </head>
 <body>
+    <div class="topo-notificacoes">
+        <div id="install-banner" class="topo-banner topo-banner-instalar hidden" role="status" aria-live="polite">
+            <span class="topo-banner-text">Instale o aplicativo para melhor experiência.</span>
+            <button id="install-app-btn" class="btn btn-instalar-app" type="button">
+                📲 Instalar aplicativo
+            </button>
+        </div>
+        <div id="offline-banner" class="topo-banner topo-banner-offline hidden" role="alert" aria-live="assertive">
+            <span class="topo-banner-text">Sem internet: exibindo dados locais. Sincronização indisponível.</span>
+        </div>
+    </div>
+
     <header>
         <h1>💰 CONTROLE FINANCEIRO - PROJETO</h1>
     </header>

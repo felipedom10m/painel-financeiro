@@ -1,5 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#1a1a1a"/>
-  <circle cx="256" cy="256" r="200" fill="#D4AF37"/>
-  <text x="256" y="320" font-family="Arial, sans-serif" font-size="200" fill="#1a1a1a" text-anchor="middle" font-weight="bold">💰</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#151515"/>
+      <stop offset="100%" stop-color="#2b2b2b"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b8860b"/>
+      <stop offset="50%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#ffd700"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="64" y="64" width="384" height="384" rx="96" fill="url(#gold)"/>
+  <rect x="96" y="96" width="320" height="320" rx="76" fill="#1a1a1a"/>
+
+  <g fill="url(#gold)">
+    <rect x="144" y="292" width="44" height="68" rx="8"/>
+    <rect x="206" y="248" width="44" height="112" rx="8"/>
+    <rect x="268" y="212" width="44" height="148" rx="8"/>
+    <rect x="330" y="172" width="44" height="188" rx="8"/>
+  </g>
+
+  <text x="256" y="202" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="700" fill="url(#gold)">R$</text>
 </svg>
