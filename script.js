@@ -507,6 +507,133 @@ function fecharModalComprovante() {
     document.getElementById('modal-comprovante').style.display = 'none';
 }
 
+function obterItensParaLimpeza(caixa) {
+    if (caixa === 'todos') {
+        return [...dados.pessoal.historico, ...dados.marketing.historico];
+    }
+
+    return [...dados[caixa].historico];
+}
+
+function textoCaixa(caixa) {
+    if (caixa === 'pessoal') {
+        return 'Gastos Pessoais';
+    }
+
+    if (caixa === 'marketing') {
+        return 'Marketing';
+    }
+
+    return 'Pessoal + Marketing';
+}
+
+async function deletarComprovantesEmLote(itens) {
+    const nomesArquivos = [...new Set(
+        itens
+            .filter(item => item.comprovante_url && item.comprovante_nome)
+            .map(item => `${item.id}_${item.comprovante_nome}`)
+    )];
+
+    if (nomesArquivos.length === 0) {
+        return true;
+    }
+
+    const { error } = await supabase.storage
+        .from('comprovantes')
+        .remove(nomesArquivos);
+
+    if (error) {
+        console.error('Erro ao deletar comprovantes em lote:', error);
+        return false;
+    }
+
+    return true;
+}
+
+async function deletarMovimentacoesEmLote(caixa) {
+    if (caixa === 'todos') {
+        const { error } = await supabase
+            .from('movimentacoes')
+            .delete()
+            .in('caixa', ['pessoal', 'marketing']);
+
+        if (error) {
+            console.error('Erro ao deletar movimentações em lote:', error);
+        }
+
+        return !error;
+    }
+
+    const { error } = await supabase
+        .from('movimentacoes')
+        .delete()
+        .eq('caixa', caixa);
+
+    if (error) {
+        console.error('Erro ao deletar movimentações em lote:', error);
+    }
+
+    return !error;
+}
+
+function limparDadosLocais(caixa) {
+    if (caixa === 'todos') {
+        dados.pessoal.saldo = 0;
+        dados.pessoal.historico = [];
+        dados.marketing.saldo = 0;
+        dados.marketing.historico = [];
+        return;
+    }
+
+    dados[caixa].saldo = 0;
+    dados[caixa].historico = [];
+}
+
+async function limparHistorico(caixa) {
+    if (!navigator.onLine) {
+        mostrarNotificacao('Sem internet: não é possível limpar histórico agora.', 'erro');
+        return;
+    }
+
+    const itens = obterItensParaLimpeza(caixa);
+
+    if (itens.length === 0) {
+        mostrarNotificacao(`Não há registros em ${textoCaixa(caixa)}.`, 'info');
+        return;
+    }
+
+    const confirmou = confirm(
+        `Excluir TODOS os registros de ${textoCaixa(caixa)}?\n\nEssa ação não pode ser desfeita.`
+    );
+
+    if (!confirmou) {
+        return;
+    }
+
+    try {
+        const comprovantesRemovidos = await deletarComprovantesEmLote(itens);
+
+        const sucessoDelete = await deletarMovimentacoesEmLote(caixa);
+
+        if (!sucessoDelete) {
+            mostrarNotificacao('Erro ao limpar histórico no servidor.', 'erro');
+            return;
+        }
+
+        limparDadosLocais(caixa);
+        salvarCacheLocal();
+        atualizarInterface();
+        if (!comprovantesRemovidos) {
+            mostrarNotificacao('Histórico limpo, mas alguns comprovantes não puderam ser removidos.', 'info');
+            return;
+        }
+        mostrarNotificacao(`Histórico de ${textoCaixa(caixa)} limpo com sucesso!`, 'sucesso');
+    } catch (error) {
+        console.error('Erro ao limpar histórico:', error);
+        mostrarNotificacao('Erro ao limpar histórico.', 'erro');
+    }
+}
+
 // Deletar movimentação
 async function deletarMovimentacao(caixa, id) {
     if (!confirm('Tem certeza que deseja deletar esta movimentação?')) {

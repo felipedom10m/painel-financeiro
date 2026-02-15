@@ -29,7 +29,14 @@
         <h1>💰 CONTROLE FINANCEIRO - PROJETO</h1>
     </header>
 
-    <main class="container">
+    <main>
+        <div class="acoes-globais">
+            <button class="btn btn-limpar-tudo" onclick="limparHistorico('todos')">
+                🧹 Limpar Tudo (Pessoal + Marketing)
+            </button>
+        </div>
+
+        <div class="container">
         <!-- Caixa Gastos Pessoais -->
         <div class="caixa-card">
             <div class="caixa-header">
@@ -51,7 +58,12 @@
             </div>
 
             <div class="historico-section">
-                <h3>📋 HISTÓRICO</h3>
+                <div class="historico-topo">
+                    <h3>📋 HISTÓRICO</h3>
+                    <button class="btn-limpar-caixa" onclick="limparHistorico('pessoal')">
+                        🗑️ Limpar Caixa
+                    </button>
+                </div>
                 <div class="historico-lista" id="historico-pessoal">
                     <p class="historico-vazio">Nenhuma movimentação ainda</p>
                 </div>
@@ -79,11 +91,17 @@
             </div>
 
             <div class="historico-section">
-                <h3>📋 HISTÓRICO</h3>
+                <div class="historico-topo">
+                    <h3>📋 HISTÓRICO</h3>
+                    <button class="btn-limpar-caixa" onclick="limparHistorico('marketing')">
+                        🗑️ Limpar Caixa
+                    </button>
+                </div>
                 <div class="historico-lista" id="historico-marketing">
                     <p class="historico-vazio">Nenhuma movimentação ainda</p>
                 </div>
             </div>
+        </div>
         </div>
     </main>
 
