@@ -15,6 +15,7 @@ let caixaAtual = '';
 let tipoAtual = '';
 let sincronizacaoEmAndamento = false;
 let deferredInstallPrompt = null;
+let contextoExclusao = null;
 
 const CACHE_KEY_DADOS = 'painel_financeiro_cache_v1';
 
@@ -451,7 +452,7 @@ function atualizarHistorico(caixa) {
                 <button class="btn-comprovante" onclick="verComprovante('${caixa}', ${item.id})" ${!item.comprovante_url ? 'disabled' : ''}>
                     📎 ${item.comprovante_url ? 'Ver Comprovante' : 'Sem Comprovante'}
                 </button>
-                <button class="btn-deletar" onclick="deletarMovimentacao('${caixa}', ${item.id})" title="Deletar">
+                <button class="btn-deletar" onclick="abrirModalExclusao('${caixa}', ${item.id})" title="Deletar">
                     🗑️
                 </button>
             </div>
@@ -507,12 +508,8 @@ function fecharModalComprovante() {
     document.getElementById('modal-comprovante').style.display = 'none';
 }
 
-function obterItensParaLimpeza(caixa) {
-    if (caixa === 'todos') {
-        return [...dados.pessoal.historico, ...dados.marketing.historico];
-    }
-
-    return [...dados[caixa].historico];
+function obterItemMovimentacao(caixa, id) {
+    return dados[caixa].historico.find(m => m.id === id);
 }
 
 function textoCaixa(caixa) {
@@ -524,7 +521,87 @@ function textoCaixa(caixa) {
         return 'Marketing';
     }
 
-    return 'Pessoal + Marketing';
+    return '';
+}
+
+function abrirModalExclusao(caixa, id) {
+    const item = obterItemMovimentacao(caixa, id);
+
+    if (!item) {
+        mostrarNotificacao('Movimentação não encontrada', 'erro');
+        return;
+    }
+
+    contextoExclusao = { caixa, id };
+
+    const descricao = document.getElementById('exclusao-descricao');
+    descricao.textContent = `${item.descricao} • ${item.valor >= 0 ? '+' : '-'}${formatarMoeda(Math.abs(item.valor))}`;
+    document.getElementById('modal-exclusao').style.display = 'block';
+}
+
+function fecharModalExclusao(limparContexto = true) {
+    document.getElementById('modal-exclusao').style.display = 'none';
+    if (limparContexto) {
+        contextoExclusao = null;
+    }
+}
+
+async function confirmarExclusaoMovimentacao() {
+    if (!contextoExclusao) {
+        return;
+    }
+
+    const { caixa, id } = contextoExclusao;
+    fecharModalExclusao();
+    await deletarMovimentacao(caixa, id);
+}
+
+function abrirModalConfirmacaoLimpeza() {
+    if (!contextoExclusao) {
+        return;
+    }
+
+    const { caixa } = contextoExclusao;
+    const descricao = document.getElementById('limpeza-descricao');
+    const input = document.getElementById('input-confirmacao-limpeza');
+    const botaoConfirmar = document.getElementById('btn-confirmar-limpeza');
+
+    descricao.textContent = `Você vai apagar todo o histórico da caixa ${textoCaixa(caixa)}.`;
+    input.value = '';
+    botaoConfirmar.disabled = true;
+
+    fecharModalExclusao(false);
+    document.getElementById('modal-confirmacao-limpeza').style.display = 'block';
+}
+
+function atualizarEstadoBotaoLimpeza() {
+    const input = document.getElementById('input-confirmacao-limpeza');
+    const botaoConfirmar = document.getElementById('btn-confirmar-limpeza');
+    botaoConfirmar.disabled = input.value.trim().toUpperCase() !== 'LIMPAR';
+}
+
+function fecharModalConfirmacaoLimpeza() {
+    document.getElementById('modal-confirmacao-limpeza').style.display = 'none';
+    document.getElementById('input-confirmacao-limpeza').value = '';
+    contextoExclusao = null;
+}
+
+async function confirmarLimpezaCaixa() {
+    if (!contextoExclusao) {
+        return;
+    }
+
+    const caixa = contextoExclusao.caixa;
+    fecharModalConfirmacaoLimpeza();
+    await limparHistorico(caixa);
+}
+
+function obterItensParaLimpeza(caixa) {
+    if (!['pessoal', 'marketing'].includes(caixa)) {
+        return [];
+    }
+
+    return [...dados[caixa].historico];
 }
 
 async function deletarComprovantesEmLote(itens) {
@@ -551,19 +628,6 @@ async function deletarComprovantesEmLote(itens) {
 }
 
 async function deletarMovimentacoesEmLote(caixa) {
-    if (caixa === 'todos') {
-        const { error } = await supabase
-            .from('movimentacoes')
-            .delete()
-            .in('caixa', ['pessoal', 'marketing']);
-
-        if (error) {
-            console.error('Erro ao deletar movimentações em lote:', error);
-        }
-
-        return !error;
-    }
-
     const { error } = await supabase
         .from('movimentacoes')
         .delete()
@@ -577,19 +641,16 @@ async function deletarMovimentacoesEmLote(caixa) {
 }
 
 function limparDadosLocais(caixa) {
-    if (caixa === 'todos') {
-        dados.pessoal.saldo = 0;
-        dados.pessoal.historico = [];
-        dados.marketing.saldo = 0;
-        dados.marketing.historico = [];
-        return;
-    }
-
     dados[caixa].saldo = 0;
     dados[caixa].historico = [];
 }
 
 async function limparHistorico(caixa) {
+    if (!['pessoal', 'marketing'].includes(caixa)) {
+        mostrarNotificacao('Ação inválida para limpeza.', 'erro');
+        return;
+    }
+
     if (!navigator.onLine) {
         mostrarNotificacao('Sem internet: não é possível limpar histórico agora.', 'erro');
         return;
@@ -599,14 +660,6 @@ async function limparHistorico(caixa) {
 
     if (itens.length === 0) {
         mostrarNotificacao(`Não há registros em ${textoCaixa(caixa)}.`, 'info');
-        return;
-    }
-
-    const confirmou = confirm(
-        `Excluir TODOS os registros de ${textoCaixa(caixa)}?\n\nEssa ação não pode ser desfeita.`
-    );
-
-    if (!confirmou) {
         return;
     }
 
@@ -636,12 +689,13 @@ async function limparHistorico(caixa) {
 
 // Deletar movimentação
 async function deletarMovimentacao(caixa, id) {
-    if (!confirm('Tem certeza que deseja deletar esta movimentação?')) {
+    if (!navigator.onLine) {
+        mostrarNotificacao('Sem internet: não é possível excluir agora.', 'erro');
         return;
     }
 
     try {
-        const item = dados[caixa].historico.find(m => m.id === id);
+        const item = obterItemMovimentacao(caixa, id);
 
         if (!item) {
             mostrarNotificacao('Movimentação não encontrada', 'erro');
@@ -729,12 +783,20 @@ function mostrarNotificacao(mensagem, tipo) {
 window.onclick = function(event) {
     const modal = document.getElementById('modal');
     const modalComprovante = document.getElementById('modal-comprovante');
+    const modalExclusao = document.getElementById('modal-exclusao');
+    const modalConfirmacaoLimpeza = document.getElementById('modal-confirmacao-limpeza');
 
     if (event.target === modal) {
         fecharModal();
     }
     if (event.target === modalComprovante) {
         fecharModalComprovante();
+    }
+    if (event.target === modalExclusao) {
+        fecharModalExclusao();
+    }
+    if (event.target === modalConfirmacaoLimpeza) {
+        fecharModalConfirmacaoLimpeza();
     }
 }
 

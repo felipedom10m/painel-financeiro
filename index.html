@@ -29,14 +29,7 @@
         <h1>💰 CONTROLE FINANCEIRO - PROJETO</h1>
     </header>
 
-    <main>
-        <div class="acoes-globais">
-            <button class="btn btn-limpar-tudo" onclick="limparHistorico('todos')">
-                🧹 Limpar Tudo (Pessoal + Marketing)
-            </button>
-        </div>
-
-        <div class="container">
+    <main class="container">
         <!-- Caixa Gastos Pessoais -->
         <div class="caixa-card">
             <div class="caixa-header">
@@ -58,12 +51,7 @@
             </div>
 
             <div class="historico-section">
-                <div class="historico-topo">
-                    <h3>📋 HISTÓRICO</h3>
-                    <button class="btn-limpar-caixa" onclick="limparHistorico('pessoal')">
-                        🗑️ Limpar Caixa
-                    </button>
-                </div>
+                <h3>📋 HISTÓRICO</h3>
                 <div class="historico-lista" id="historico-pessoal">
                     <p class="historico-vazio">Nenhuma movimentação ainda</p>
                 </div>
@@ -91,17 +79,11 @@
             </div>
 
             <div class="historico-section">
-                <div class="historico-topo">
-                    <h3>📋 HISTÓRICO</h3>
-                    <button class="btn-limpar-caixa" onclick="limparHistorico('marketing')">
-                        🗑️ Limpar Caixa
-                    </button>
-                </div>
+                <h3>📋 HISTÓRICO</h3>
                 <div class="historico-lista" id="historico-marketing">
                     <p class="historico-vazio">Nenhuma movimentação ainda</p>
                 </div>
             </div>
-        </div>
         </div>
     </main>
 
@@ -160,6 +142,52 @@
             <span class="modal-close" onclick="fecharModalComprovante()">&times;</span>
             <h2>Comprovante</h2>
             <div id="comprovante-display"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Ações de Exclusão -->
+    <div id="modal-exclusao" class="modal">
+        <div class="modal-content modal-exclusao-content">
+            <span class="modal-close" onclick="fecharModalExclusao()">&times;</span>
+            <h2>Excluir Registro</h2>
+            <p id="exclusao-descricao" class="modal-descricao"></p>
+            <div class="modal-acoes-exclusao">
+                <button class="btn btn-perigo" onclick="confirmarExclusaoMovimentacao()">
+                    🗑️ Apagar esta movimentação
+                </button>
+                <button class="btn btn-alerta" onclick="abrirModalConfirmacaoLimpeza()">
+                    🧹 Limpar toda esta caixa
+                </button>
+                <button class="btn btn-cancelar" onclick="fecharModalExclusao()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Limpeza da Caixa -->
+    <div id="modal-confirmacao-limpeza" class="modal">
+        <div class="modal-content modal-exclusao-content">
+            <span class="modal-close" onclick="fecharModalConfirmacaoLimpeza()">&times;</span>
+            <h2>Confirmação de Segurança</h2>
+            <p id="limpeza-descricao" class="modal-descricao"></p>
+            <p class="modal-ajuda">
+                Digite <strong>LIMPAR</strong> para confirmar.
+            </p>
+            <div class="form-group">
+                <input
+                    type="text"
+                    id="input-confirmacao-limpeza"
+                    placeholder="Digite LIMPAR"
+                    oninput="atualizarEstadoBotaoLimpeza()"
+                >
+            </div>
+            <div class="form-buttons">
+                <button class="btn btn-cancelar" onclick="fecharModalConfirmacaoLimpeza()">Cancelar</button>
+                <button id="btn-confirmar-limpeza" class="btn btn-perigo" onclick="confirmarLimpezaCaixa()" disabled>
+                    Confirmar Limpeza
+                </button>
+            </div>
         </div>
     </div>
 
