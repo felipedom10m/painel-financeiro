@@ -1,0 +1,13 @@
+{
+  "name": "painel-financeiro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/calculations.test.js",
+    "check": "node --check app/app.js && node --check app/ui.js && node --check app/repository.js",
+    "test:e2e": "node tests/responsive.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

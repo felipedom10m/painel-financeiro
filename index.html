@@ -1,221 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#D4AF37">
-    <title>Painel Financeiro - Controle de Investimentos</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Financeiro">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111416">
+  <meta name="description" content="Painel financeiro orientado por propósito, previsibilidade e tempo protegido.">
+  <title>Painel Financeiro</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Financeiro">
 </head>
 <body>
-    <div class="topo-notificacoes">
-        <div id="install-banner" class="topo-banner topo-banner-instalar hidden" role="status" aria-live="polite">
-            <span class="topo-banner-text">Instale o aplicativo para melhor experiência.</span>
-            <button id="install-app-btn" class="btn btn-instalar-app" type="button">
-                📲 Instalar aplicativo
-            </button>
-        </div>
-        <div id="offline-banner" class="topo-banner topo-banner-offline hidden" role="alert" aria-live="assertive">
-            <span class="topo-banner-text">Sem internet: exibindo dados locais. Sincronização indisponível.</span>
-        </div>
-    </div>
-
-    <header>
-        <h1>💰 CONTROLE FINANCEIRO - PROJETO</h1>
-    </header>
-
-    <main class="container">
-        <!-- Caixa Gastos Pessoais -->
-        <div class="caixa-card">
-            <div class="caixa-header">
-                <h2>💳 GASTOS PESSOAIS</h2>
-            </div>
-
-            <div class="saldo-display">
-                <span class="saldo-label">SALDO ATUAL</span>
-                <span class="saldo-valor" id="saldo-pessoal">R$ 0,00</span>
-            </div>
-
-            <div class="botoes-acao">
-                <button class="btn btn-adicionar" onclick="abrirModal('pessoal', 'adicionar')">
-                    ➕ Adicionar
-                </button>
-                <button class="btn btn-retirar" onclick="abrirModal('pessoal', 'retirar')">
-                    ➖ Retirar
-                </button>
-            </div>
-
-            <div class="historico-section">
-                <h3>📋 HISTÓRICO</h3>
-                <div class="historico-lista" id="historico-pessoal">
-                    <p class="historico-vazio">Nenhuma movimentação ainda</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Caixa Marketing -->
-        <div class="caixa-card">
-            <div class="caixa-header">
-                <h2>📊 MARKETING</h2>
-            </div>
-
-            <div class="saldo-display">
-                <span class="saldo-label">SALDO ATUAL</span>
-                <span class="saldo-valor" id="saldo-marketing">R$ 0,00</span>
-            </div>
-
-            <div class="botoes-acao">
-                <button class="btn btn-adicionar" onclick="abrirModal('marketing', 'adicionar')">
-                    ➕ Adicionar
-                </button>
-                <button class="btn btn-retirar" onclick="abrirModal('marketing', 'retirar')">
-                    ➖ Retirar
-                </button>
-            </div>
-
-            <div class="historico-section">
-                <h3>📋 HISTÓRICO</h3>
-                <div class="historico-lista" id="historico-marketing">
-                    <p class="historico-vazio">Nenhuma movimentação ainda</p>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal para Adicionar/Retirar -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="fecharModal()">&times;</span>
-            <h2 id="modal-titulo">Adicionar Valor</h2>
-
-            <form id="form-movimentacao" onsubmit="salvarMovimentacao(event)">
-                <div class="form-group">
-                    <label for="valor">Valor (R$)</label>
-                    <input type="number" id="valor" step="0.01" min="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="descricao">Descrição</label>
-                    <input type="text" id="descricao" placeholder="Ex: Mercado, Facebook Ads, Depósito..." required>
-                </div>
-
-                <div class="form-group">
-                    <label for="icone">Ícone</label>
-                    <select id="icone" required>
-                        <option value="💵">💵 Depósito</option>
-                        <option value="🛒">🛒 Mercado</option>
-                        <option value="🏪">🏪 Farmácia</option>
-                        <option value="🍕">🍕 Alimentação</option>
-                        <option value="⛽">⛽ Combustível</option>
-                        <option value="🏥">🏥 Saúde</option>
-                        <option value="📱">📱 Facebook Ads</option>
-                        <option value="🎯">🎯 Google Ads</option>
-                        <option value="📧">📧 Email Marketing</option>
-                        <option value="📊">📊 Outras Mídias</option>
-                        <option value="💳">💳 Pagamento</option>
-                        <option value="📝">📝 Outros</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="comprovante">Comprovante (opcional)</label>
-                    <input type="file" id="comprovante" accept="image/*,.pdf">
-                    <small>Imagem ou PDF</small>
-                </div>
-
-                <div class="form-buttons">
-                    <button type="button" class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-confirmar">Confirmar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para Ver Comprovante -->
-    <div id="modal-comprovante" class="modal">
-        <div class="modal-content modal-comprovante-content">
-            <span class="modal-close" onclick="fecharModalComprovante()">&times;</span>
-            <h2>Comprovante</h2>
-            <div id="comprovante-display"></div>
-        </div>
-    </div>
-
-    <!-- Modal de Ações de Exclusão -->
-    <div id="modal-exclusao" class="modal">
-        <div class="modal-content modal-exclusao-content">
-            <span class="modal-close" onclick="fecharModalExclusao()">&times;</span>
-            <h2>Excluir Registro</h2>
-            <p id="exclusao-descricao" class="modal-descricao"></p>
-            <div class="modal-acoes-exclusao">
-                <button class="btn btn-perigo" onclick="confirmarExclusaoMovimentacao()">
-                    🗑️ Apagar esta movimentação
-                </button>
-                <button class="btn btn-alerta" onclick="abrirModalConfirmacaoLimpeza()">
-                    🧹 Limpar toda esta caixa
-                </button>
-                <button class="btn btn-cancelar" onclick="fecharModalExclusao()">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Limpeza da Caixa -->
-    <div id="modal-confirmacao-limpeza" class="modal">
-        <div class="modal-content modal-exclusao-content">
-            <span class="modal-close" onclick="fecharModalConfirmacaoLimpeza()">&times;</span>
-            <h2>Confirmação de Segurança</h2>
-            <p id="limpeza-descricao" class="modal-descricao"></p>
-            <p class="modal-ajuda">
-                Digite <strong>LIMPAR</strong> para confirmar.
-            </p>
-            <div class="form-group">
-                <input
-                    type="text"
-                    id="input-confirmacao-limpeza"
-                    placeholder="Digite LIMPAR"
-                    oninput="atualizarEstadoBotaoLimpeza()"
-                >
-            </div>
-            <div class="form-buttons">
-                <button class="btn btn-cancelar" onclick="fecharModalConfirmacaoLimpeza()">Cancelar</button>
-                <button id="btn-confirmar-limpeza" class="btn btn-perigo" onclick="confirmarLimpezaCaixa()" disabled>
-                    Confirmar Limpeza
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Biblioteca do Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Configuração do Supabase (direto no HTML) -->
-    <script>
-        // Configuração
-        var SUPABASE_URL = 'https://gqswzyuaggalrpldsojt.supabase.co';
-        var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdxc3d6eXVhZ2dhbHJwbGRzb2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNTE2NzIsImV4cCI6MjA4MzYyNzY3Mn0.Il-PTbxQHJhk0uZ0vdVPsKKLscq0syVe16sTDA7vLNU';
-
-        // Inicializar cliente Supabase usando var para criar variável global
-        var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
-
-    <!-- Script principal -->
-    <script src="script.js"></script>
-
-    <!-- Registrar Service Worker para PWA -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/painel-financeiro/service-worker.js')
-                    .then(registration => console.log('Service Worker registrado'))
-                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
-            });
-        }
-    </script>
+  <div id="app-status" class="app-status hidden" role="status" aria-live="polite"></div>
+  <header class="app-header">
+    <div><p class="eyebrow">VISÃO, CAIXA E TEMPO</p><h1>PAINEL FINANCEIRO</h1></div>
+    <button id="sync-button" class="icon-button" type="button" aria-label="Sincronizar dados" title="Sincronizar dados">↻</button>
+  </header>
+  <main id="app" class="app-shell" aria-busy="true">
+    <section class="skeleton-card skeleton-hero" aria-label="Carregando painel"></section>
+    <section class="skeleton-grid"><div class="skeleton-card"></div><div class="skeleton-card"></div></section>
+  </main>
+  <button id="new-record-button" class="new-record-button hidden" type="button"><span aria-hidden="true">＋</span> NOVO REGISTRO</button>
+  <dialog id="app-dialog" class="app-dialog" aria-labelledby="dialog-title">
+    <form id="dialog-form" method="dialog" novalidate>
+      <div class="dialog-header">
+        <div><p id="dialog-kicker" class="eyebrow"></p><h2 id="dialog-title"></h2></div>
+        <button class="dialog-close icon-button" type="button" data-action="close-dialog" aria-label="Fechar">×</button>
+      </div>
+      <div id="dialog-body" class="dialog-body"></div>
+      <p id="dialog-error" class="form-error hidden" role="alert"></p>
+      <div class="dialog-actions">
+        <button class="button button-secondary" type="button" data-action="close-dialog">Cancelar</button>
+        <button id="dialog-submit" class="button button-primary" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.financeSupabase = window.supabase.createClient(
+      'https://gqswzyuaggalrpldsojt.supabase.co',
+      'sb_publishable_KUP40TLX5yr7-OUzLzAq4g_kVtm3ivD'
+    );
+  </script>
+  <script type="module" src="app/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/painel-financeiro/service-worker.js')
+          .then(registration => registration.update())
+          .catch(() => document.getElementById('app-status')?.classList.remove('hidden'));
+      });
+    }
+  </script>
 </body>
 </html>
