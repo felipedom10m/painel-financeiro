@@ -2,3 +2,4 @@ node_modules/
 artifacts/
 .DS_Store
 supabase-publishable-key.txt
+github-publish-token.txt
