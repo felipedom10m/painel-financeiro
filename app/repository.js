@@ -32,6 +32,10 @@ export class FinanceRepository {
 
     if (data?.descricao) {
       const remote = JSON.parse(data.descricao);
+      if (!remote.settings?.legacyPurged) {
+        const migrated = await this.save(remote, { purgeLegacy: true });
+        return migrated.state;
+      }
       this.saveLocal(remote);
       return remote;
     }
@@ -70,7 +74,7 @@ export class FinanceRepository {
   }
 
   async purgeLegacy() {
-    const { error } = await this.client.from('movimentacoes').delete().neq('id', SNAPSHOT_ID);
+    const { error } = await this.client.from('movimentacoes').delete().in('caixa', ['pessoal', 'marketing']);
     if (error) throw new Error('A nova versão foi salva, mas os registros antigos ainda não puderam ser removidos.');
 
     const { data: files, error: listError } = await this.client.storage.from('comprovantes').list('', { limit: 1000 });
