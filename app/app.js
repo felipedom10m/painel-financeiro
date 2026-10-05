@@ -1,6 +1,6 @@
 import { FinanceRepository } from './repository.js';
 import { renderDashboard, field, option, escapeHtml } from './ui.js';
-import { addMonths, invoiceKeyForPurchase, toIsoDate, uid } from './date-utils.js';
+import { addMonths, dueDateForInvoice, invoiceKeyForPurchase, monthLabel, toIsoDate, uid } from './date-utils.js';
 
 const previewMode = new URLSearchParams(window.location.search).has('demo');
 const repository = new FinanceRepository(previewMode ? null : undefined);
@@ -99,12 +99,13 @@ function commitmentDialog(id = '') {
 function billDialog(id = '') {
   const item = id ? findById(state.recurringBills, id) : { name: '', type: 'fixed', amount: null, dueDay: null, active: true };
   const monthOverride = id ? state.monthlyOverrides[state.selectedMonth]?.[id] ?? '' : '';
+  const dueDate = item.dueDay ? dueDateForInvoice(state.selectedMonth, item.dueDay) : '';
+  const selectedMonthLabel = monthLabel(state.selectedMonth);
   const types = option('fixed', 'Fixa', item.type === 'fixed') + option('estimated', 'Variável estimada', item.type === 'estimated') + option('budget', 'Orçamento mensal', item.type === 'budget');
   openDialog({ title: id ? 'Editar conta mensal' : 'Nova conta mensal', kicker: 'PREVISIBILIDADE', body:
-    `${field('name', 'Nome da conta', 'text', item.name)}${field('type', 'Tipo', 'select', '', types)}<div class="form-grid">${field('amount', item.type === 'budget' ? 'Limite mensal padrão' : 'Previsão mensal padrão', 'number', item.amount ?? '')}${field('dueDay', 'Dia do vencimento', 'number', item.dueDay ?? '')}</div>${id ? field('monthAmount', `Valor real somente em ${state.selectedMonth}`, 'number', monthOverride) : ''}<p class="form-help">A previsão padrão se repete. Quando a conta chegar, informe o valor real apenas para o mês selecionado.</p>${id ? '<button class="danger-link" type="button" data-action="delete-current-bill">Excluir conta</button>' : ''}`,
+    `${field('name', 'Nome da conta', 'text', item.name)}${field('type', 'Tipo', 'select', '', types)}<div class="form-grid">${field('amount', item.type === 'budget' ? 'Limite mensal padrão (opcional)' : 'Previsão mensal padrão (opcional)', 'number', item.amount ?? '', '', false)}${field('dueDate', 'Vencimento mensal', 'date', dueDate)}</div>${id ? field('monthAmount', `Valor real de ${selectedMonthLabel} (opcional)`, 'number', monthOverride, '', false) : ''}<p class="form-help"><strong>Vencimento mensal:</strong> escolha uma data no calendário. O sistema repetirá esse dia nos próximos meses.</p><p class="form-help"><strong>Previsão padrão:</strong> valor usado para planejar os meses futuros. Quando a conta chegar, informe o valor real somente no mês correspondente.</p>${id ? '<button class="danger-link" type="button" data-action="delete-current-bill">Excluir conta</button>' : ''}`,
     onSubmit: async data => {
-      const payload = { ...item, id: item.id || uid('bill'), name: data.name, type: data.type, amount: numberOrNull(data.amount), dueDay: numberOrNull(data.dueDay), active: true };
-      if (payload.dueDay && (payload.dueDay < 1 || payload.dueDay > 31)) throw new Error('Informe um vencimento entre os dias 1 e 31.');
+      const payload = { ...item, id: item.id || uid('bill'), name: data.name, type: data.type, amount: numberOrNull(data.amount), dueDay: Number(data.dueDate.slice(-2)), active: true };
       if (id) {
         Object.assign(item, payload);
         state.monthlyOverrides[state.selectedMonth] ||= {};

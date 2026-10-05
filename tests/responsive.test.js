@@ -22,6 +22,9 @@ try {
     await page.waitForSelector('#app-dialog[open]');
     assert.equal(await page.locator('#dialog-title').textContent(), 'Editar propósito');
     await page.locator('[data-action="close-dialog"]').first().click();
+    await page.locator('[data-action="edit-bill"]').first().click();
+    assert.equal(await page.locator('#app-dialog [name="dueDate"]').getAttribute('type'), 'date');
+    await page.locator('[data-action="close-dialog"]').first().click();
     await page.locator('#new-record-button').click();
     await page.locator('[data-action="choose-record"][data-type="purchase"]').click();
     await page.waitForFunction(() => document.querySelector('#dialog-title')?.textContent === 'Compra no cartão');

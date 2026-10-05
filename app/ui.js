@@ -54,8 +54,8 @@ function cards(state, selectedMonth) {
         <div><small>FATURA ${monthLabel(invoice.key)}</small><strong>${money(invoice.total)}</strong></div>
         <div><small>${invoice.paid ? 'Fatura paga' : `Vence em ${fullDate(dueDateForInvoice(invoice.key, card.dueDay))}`}</small><div class="mini-progress"><span style="width:${invoice.total ? 48 : 0}%"></span></div></div>
       </div>
-      <div class="invoice-split"><div><small>CUSTOS DO TRABALHO</small><strong>${money(invoice.work)}</strong></div><div><small>DESPESAS DO DIA A DIA</small><strong>${money(invoice.daily)}</strong></div></div>
-      <div class="card-actions"><button class="button button-secondary" data-action="view-purchases" data-id="${card.id}" data-invoice="${invoice.key}">☷ Ver compras</button><button class="button button-success" data-action="toggle-invoice-paid" data-id="${card.id}" data-invoice="${invoice.key}">${invoice.paid ? '↩ Reabrir fatura' : '✓ Marcar fatura paga'}</button></div>
+      <div class="invoice-split"><div><small>CUSTOS DO TRABALHO</small><strong>${money(invoice.work)}</strong><span>Combustível, pedágio e gastos para produzir renda</span></div><div><small>DESPESAS DO DIA A DIA</small><strong>${money(invoice.daily)}</strong><span>Compras pessoais, casa e alimentação</span></div></div>
+      <div class="card-actions"><button class="button button-secondary" data-action="view-purchases" data-id="${card.id}" data-invoice="${invoice.key}">☷ Ver ${invoice.purchases.length} compras da fatura</button><button class="button button-success" data-action="toggle-invoice-paid" data-id="${card.id}" data-invoice="${invoice.key}">${invoice.paid ? '↩ Reabrir fatura' : '✓ Marcar fatura paga'}</button></div>
       <button class="future-invoice" data-action="view-purchases" data-id="${card.id}" data-invoice="${nextInvoice.key}"><span>${monthLabel(nextInvoice.key)}</span><strong>${money(nextInvoice.total)}</strong><small>Próxima fatura</small><span>›</span></button>
     </article>`;
   }).join('');
@@ -96,9 +96,10 @@ export function renderDashboard(root, state, today) {
     <button class="plan-button" data-action="plan-months">▣ Planejar próximos meses ›</button>`;
 }
 
-export function field(name, label, type = 'text', value = '', options = '') {
-  if (type === 'select') return `<label class="form-field"><span>${label}</span><select name="${name}" required>${options}</select></label>`;
-  return `<label class="form-field"><span>${label}</span><input name="${name}" type="${type}" value="${escapeHtml(value)}" ${type === 'number' ? 'min="0" step="0.01" inputmode="decimal"' : ''} required></label>`;
+export function field(name, label, type = 'text', value = '', options = '', required = true) {
+  const requiredAttribute = required ? 'required' : '';
+  if (type === 'select') return `<label class="form-field"><span>${label}</span><select name="${name}" ${requiredAttribute}>${options}</select></label>`;
+  return `<label class="form-field"><span>${label}</span><input name="${name}" type="${type}" value="${escapeHtml(value)}" ${type === 'number' ? 'min="0" step="0.01" inputmode="decimal"' : ''} ${requiredAttribute}></label>`;
 }
 
 export function option(value, label, selected = false) { return `<option value="${value}" ${selected ? 'selected' : ''}>${label}</option>`; }
